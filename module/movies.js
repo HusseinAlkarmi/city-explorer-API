@@ -1,25 +1,33 @@
 'use strict';
 
 const axios = require("axios");
-
+let cache = require("./cache.js");
 function getMovie (req, res){
 
     let searchQuery = req.query.searchQuery;
 
     let URLmovie = `https://api.themoviedb.org/3/search/movie?api_key=${process.env.MOVIE_KEY }&language=en-US&query=${searchQuery}&page=1&include_adult=false`;
     
+  if (cache[searchQuery] !== undefined) {
+    console.log("the cashe contain data ");
+    console.log(cache);
+    res.send(cache[searchQuery]);
+  } else {
+    console.log("cache memory is empty hit the api");
+
     console.log(URLmovie);
-    console.log(req.query)
-     axios.get(URLmovie).then(movieInfo=>{
-    console.log(movieInfo) 
-    console.log(movieInfo.results)                  
-    
-    let arrayMovie = movieInfo.data.results.map(data=>
+    console.log(req.query);
+    axios
+      .get(URLmovie)
+      .then((movieData) => {
+
+    let arrayMovie = movieData.data.results.map(data=>
     {return new Movie(data.title,data.poster_path)
     })
-
-res.send(arrayMovie)
-  }).catch(error => { res.send(error)
+    cache[searchQuery] = arrayMovie;
+    res.send(arrayMovie);
+  })
+  .catch(error => { res.send(error)
   });
   }
 
@@ -32,6 +40,6 @@ res.send(arrayMovie)
    
 }
 }
-    
+}
 
 module.exports=getMovie;
